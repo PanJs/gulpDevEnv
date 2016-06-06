@@ -1,12 +1,18 @@
 {
   "name": "gulpDevEnv",
   "version": "0.1.0",
+  "author": "Adam <zhaiduo@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zhaiduo/gulpDevEnv.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zhaiduo/gulpDevEnv/issues"
+  },
   "scripts": {
-    "start": "gulp",
-    "test": "karma start karma.test.conf.js",
-    "dev": "",
     "watch": "gulp watch:Django --src=no",
-    "watch-source": "gulp watch:Django --src=yes"
+    "watch-source": "gulp watch:Django --src=yes",
+    "test": "karma start karma.test.conf.js"
   },
   "config": {},
   "main": "index.js",
@@ -23,6 +29,7 @@
     "gulp-if": "^1.2.5",
     "gulp-less": "^3.0.3",
     "gulp-minify-css": "^1.2.3",
+    "gulp-ng-annotate": "^2.0.0",
     "gulp-ngmin": "^0.3.0",
     "gulp-rename": "^1.2.2",
     "gulp-uglify": "^1.5.1",
@@ -32,14 +39,19 @@
     "karma-chrome-launcher": "^0.2.0",
     "karma-jasmine": "^0.3.6",
     "karma-preprocessor-pullscripts": "^0.2.0",
+    "karma-requirejs": "^1.0.0",
     "karma-safari-launcher": "^0.1.1",
     "less": "^2.5.1",
     "less-plugin-clean-css": "^1.5.1",
     "merge-stream": "^1.0.0",
     "mocha": "^2.3.2",
     "q": "^1.4.1",
+    "requirejs": "^2.2.0",
     "selenium-webdriver": "^2.46.1",
     "yargs": "^3.32.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "jasmine-node-karma": "^1.6.1"
+  },
+  "license": "MIT"
 }

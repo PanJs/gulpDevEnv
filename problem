@@ -1,0 +1,25 @@
+gulpDevEnv git:(master) npm install
+npm WARN deprecated gulp-ngmin@0.3.0: Deprecated in favor of gulp-ng-annotate: https://github.com/Kagami/gulp-ng-annotate - Reasoning: https://github.com/btford/ngmin/issues/93
+npm WARN deprecated gulp-minify-css@1.2.4: Please use gulp-clean-css
+npm WARN deprecated graceful-fs@3.0.8: graceful-fs v3.0.0 and before will fail on node releases >= v7.0. Please update to graceful-fs@^4.0.0 as soon as possible. Use 'npm ls graceful-fs' to find it in the tree.
+npm WARN deprecated lodash@1.0.2: lodash@<3.0.0 is no longer maintained. Upgrade to lodash@^4.0.0.
+npm WARN deprecated graceful-fs@1.2.3: graceful-fs v3.0.0 and before will fail on node releases >= v7.0. Please update to graceful-fs@^4.0.0 as soon as possible. Use 'npm ls graceful-fs' to find it in the tree.
+npm WARN deprecated ngmin@0.5.0: use ng-annotate instead
+npm WARN deprecated CSSselect@0.7.0: the module is now available as 'css-select'
+npm WARN deprecated CSSwhat@0.4.7: the module is now available as 'css-what'
+npm WARN deprecated jade@0.26.3: Jade has been renamed to pug, please install the latest version of pug instead of jade
+
+> fsevents@1.0.12 install /Users/gzadamlv/gulpDevEnv/node_modules/fsevents
+> node-pre-gyp install --fallback-to-build
+
+gyp WARN download NVM_NODEJS_ORG_MIRROR is deprecated and will be removed in node-gyp v4, please use NODEJS_ORG_MIRROR
+gyp WARN download NVM_NODEJS_ORG_MIRROR is deprecated and will be removed in node-gyp v4, please use NODEJS_ORG_MIRROR
+gyp WARN download NVM_NODEJS_ORG_MIRROR is deprecated and will be removed in node-gyp v4, please use NODEJS_ORG_MIRROR
+  SOLINK_MODULE(target) Release/.node
+  CXX(target) Release/obj.target/fse/fsevents.o
+  SOLINK_MODULE(target) Release/fse.node
+  COPY /Users/gzadamlv/gulpDevEnv/node_modules/fsevents/lib/binding/Release/node-v48-darwin-x64/fse.node
+  TOUCH Release/obj.target/action_after_build.stamp
+gulpDevEnv@0.1.0 /Users/gzadamlv/gulpDevEnv
+├── angular@1.5.6
+├── angular-mocks@1.5.6

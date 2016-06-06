@@ -1,3 +1,5 @@
+'use strict';
+
 var gulp = require('gulp');
 var browserSync = require('browser-sync').create();
 var reload = browserSync.reload;
@@ -10,7 +12,8 @@ var rename = require('gulp-rename');
 var uglify = require('gulp-uglify');
 var watch = require('gulp-watch');
 var exec = require('child_process').exec;
-var ngmin = require('gulp-ngmin');
+//var ngmin = require('gulp-ngmin');
+var ngAnnotate = require('gulp-ng-annotate');
 var minifyCss = require('gulp-minify-css');
 var gulpif = require('gulp-if');
 var argv = require('yargs').argv;
@@ -30,13 +33,19 @@ var gulpif = require('gulp-if');
 var Q = require('q');
 var karmaServer = require('karma').Server;
 
+var _red = function(title, info) {
+    console.log(chalk.white.bgRed.bold(' ' + title + ' '), info);
+};
+
 //////////配置目录名称
 
 //普通js脚本开发目录，一般放在gulpDevEnv目录下： gulpDevEnv/dev
 var sourceDirName = 'dev';
 //普通js脚本同步目录，一般放在gulpDevEnv目录外： ../dist/dev (dev和dist也可以同名)
-var targetDirName = 'dist';
-
+var targetDirName = 'dist'; //'dist';
+// check if targetDir is inside of gulpDevEnv or not
+var targetDirIsInside = false;
+var prefixOfTargetDir = (targetDirIsInside) ? '' : '../';
 //////////配置目录名称
 
 //sourceDirName和targetDirName只能包含0-9a-z_
@@ -44,11 +53,11 @@ sourceDirName = sourceDirName.replace(/[\r\n]/ig, "");
 targetDirName = targetDirName.replace(/[\r\n]/ig, "");
 if (sourceDirName === "") {
     console.log(chalk.white.bgRed.bold('[error]') + ' 缺少 sourceDirName');
-    return false;
+    process.exit()
 }
 if (targetDirName === "") {
     console.log(chalk.white.bgRed.bold('[error]') + ' 缺少 targetDirName');
-    return false;
+    process.exit()
 }
 
 //deploy前请gulp karma进行测试
@@ -106,7 +115,7 @@ gulp.task('watch:Django', function() {
     if (isCompress) {
         console.log(chalk.white.bgGreen.bold('［压缩模式］'));
     } else {
-        console.log(chalk.white.bgBlue.bold('［非压缩模式］'));
+        console.log(chalk.white.bgMagenta.bold('［非压缩模式］'));
     }
     console.log(chalk.white.bgBlue.bold('［请注意］：') + chalk.black.bgWhite.bold(' push／pull代码时请暂停watch:Django文件监控［Ctrl + c］'));
     browserSync.init({
@@ -225,10 +234,10 @@ var syncCss = function(chgdFiles, isCompress, trgDirName) {
         if (chgdFiles.path.match(/^(.*)\/([^\/]+)$/i)) {
             var basePath = RegExp.$2;
             var destDir = '';
-            var reg = new RegExp("^(.+)\/" + sourceDirName + "\/(.+)\/([^\/]+)$", "i");
+            var reg = new RegExp("^(.+)\/(" + sourceDirName + "\/)?(.+)\/([^\/]+)$", "i");
             if (chgdFiles.path.match(reg)) {
-                destDir = RegExp.$2 + '/';
-                console.log('destDir', basePath, '../' + trgDirName + '/' + destDir);
+                destDir = RegExp.$3 + '/';
+                console.log('destDir', basePath, prefixOfTargetDir + trgDirName + '/' + destDir);
 
                 var go = function() {
                     var deferred = Q.defer();
@@ -236,7 +245,7 @@ var syncCss = function(chgdFiles, isCompress, trgDirName) {
                         .pipe(gulpif(isCompress, minifyCss({
                             compatibility: 'ie9'
                         })))
-                        .pipe(gulp.dest('../' + trgDirName + '/' + destDir))
+                        .pipe(gulp.dest(prefixOfTargetDir + trgDirName + '/' + destDir))
                         .on('end', function() {
                             //console.log('end ');
                             deferred.resolve({
@@ -250,11 +259,11 @@ var syncCss = function(chgdFiles, isCompress, trgDirName) {
                     go()
                 ]);
                 allPromise.then(function(data) {
-                    console.log('finished', data, '../' + trgDirName + '/' + data[0].destDir + data[0].basePath);
+                    console.log('finished', data, prefixOfTargetDir + trgDirName + '/' + data[0].destDir + data[0].basePath);
                     //貌似无效，生成min.css也有点多余
                     var deferred2 = Q.defer();
                     /*
-                    gulp.src('../' + trgDirName + '/' + data[0].destDir + data[0].basePath)
+                    gulp.src(prefixOfTargetDir + trgDirName + '/' + data[0].destDir + data[0].basePath)
                         .pipe(nano())
                         .pipe(rename({
                             suffix: '.min'
@@ -285,15 +294,15 @@ var syncJs = function(chgdFiles, isCompress, trgDirName) {
         if (chgdFiles.path.match(/^(.*)\/([^\/]+)$/i)) {
             var basePath = RegExp.$2;
             var destDir = '';
-            var reg = new RegExp("^(.+)\/" + sourceDirName + "\/(.+)\/([^\/]+)$", "i");
+            var reg = new RegExp("^(.+)\/(" + sourceDirName + "\/)?(.+)\/([^\/]+)$", "i");
             if (chgdFiles.path.match(reg)) {
-                destDir = RegExp.$2 + '/';
-                console.log('destDir', '../' + trgDirName + '/' + destDir + basePath);
+                destDir = RegExp.$3 + '/';
+                console.log('destDir', prefixOfTargetDir + trgDirName + '/' + destDir + basePath);
                 all = gulp.src([
                     chgdFiles.path
                 ])
-                    .pipe(gulpif(isCompress, ngmin({
-                        dynamic: false
+                    .pipe(gulpif(isCompress, ngAnnotate({
+                        //dynamic: false
                     })))
                     .pipe(gulpif(isCompress, uglify({
                         output: {
@@ -304,7 +313,7 @@ var syncJs = function(chgdFiles, isCompress, trgDirName) {
                         basePath: basePath,
                         sourceRoot: '/'
                     })))
-                    .pipe(gulp.dest('../' + trgDirName + '/' + destDir));
+                    .pipe(gulp.dest(prefixOfTargetDir + trgDirName + '/' + destDir));
             }
         }
     }
