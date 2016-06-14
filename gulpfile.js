@@ -37,6 +37,8 @@ var _red = function(title, info) {
     console.log(chalk.white.bgRed.bold(' ' + title + ' '), info);
 };
 
+var syncModule = require('./syncModule');
+
 //////////配置目录名称
 
 //普通js脚本开发目录，一般放在gulpDevEnv目录下： gulpDevEnv/dev
@@ -186,149 +188,24 @@ gulp.task('watch:Django', function() {
 
 });
 
-var syncLess = function(chgdFiles, trgDirName) {
-    if (chgdFiles.path != undefined && chgdFiles.path != null && chgdFiles.path.match(/\.(less)$/i)) {
-        if (chgdFiles.path.match(/^(.*)\/([^\/]+)$/i)) {
-            var basePath = RegExp.$2;
-            var destDir = RegExp.$1 + '/';
-            var reg = new RegExp("^(.+)\/" + sourceDirName + "\/(.+)\/([^\/]+)$", "i");
-            if (chgdFiles.path.match(reg)) {
-                //console.log('syncLess', basePath, chgdFiles.path, destDir);
-                var go = function() {
-                    var deferred = Q.defer();
-                    gulp.src(chgdFiles.path)
-                        .pipe(less({
-                            paths: [destDir]
-                        }))
-                        .pipe(gulp.dest(destDir))
-                        .pipe(browserSync.stream({
-                            match: "**/*.css"
-                        }));
-                    return deferred.promise;
-                };
-                var allPromise = Q.all([
-                    go()
-                ]);
-                allPromise.then(function(data) {
-                    console.log('finished', data, '../' + trgDirName + '/' + data[0].destDir + data[0].basePath);
-                    var deferred2 = Q.defer();
-                    return deferred2.promise;
-                }, function(data) {
-                    console.log('error', data);
-                    return deferred.promise;
-                });
-
-            }
-        }
-    }
-};
 //如果文件有修改，同步最新less到目录 ./开发目录/ to ./发布目录/
 gulp.task('deploy_local_less', ['dev'], function() {
     console.log('deploy_local_less');
     var all;
     var chgdFiles = chgdLess;
-    syncLess(chgdFiles, targetDirName);
+    syncModule.syncLess(chgdFiles, sourceDirName, targetDirName);
 });
 
-
-var syncCss = function(chgdFiles, isCompress, trgDirName) {
-    if (chgdFiles.path != undefined && chgdFiles.path != null && chgdFiles.path.match(/\.(css)$/i) && !chgdFiles.path.match(/\.min\.(css)$/i)) {
-        if (chgdFiles.path.match(/^(.*)\/([^\/]+)$/i)) {
-            var basePath = RegExp.$2;
-            var destDir = '';
-            var reg = new RegExp("^(.+)\/(" + sourceDirName + "\/)?(.+)\/([^\/]+)$", "i");
-            if (chgdFiles.path.match(reg)) {
-                destDir = RegExp.$3 + '/';
-                if (destDir.indexOf(sourceDirName) === -1) {
-                    destDir = sourceDirName + '/' + destDir;
-                }
-                console.log('destDir', basePath, prefixOfTargetDir + trgDirName + '/' + destDir);
-                var go = function() {
-                    var deferred = Q.defer();
-                    gulp.src(chgdFiles.path)
-                        .pipe(gulpif(isCompress, minifyCss({
-                            compatibility: 'ie9'
-                        })))
-                        .pipe(gulp.dest(prefixOfTargetDir + trgDirName + '/' + destDir))
-                        .on('end', function() {
-                            //console.log('end ');
-                            deferred.resolve({
-                                destDir: destDir,
-                                basePath: basePath
-                            });
-                        });
-                    return deferred.promise;
-                };
-                var allPromise = Q.all([
-                    go()
-                ]);
-                allPromise.then(function(data) {
-                    console.log('finished', data, prefixOfTargetDir + trgDirName + '/' + data[0].destDir + data[0].basePath);
-                    //貌似无效，生成min.css也有点多余
-                    var deferred2 = Q.defer();
-                    /*
-                    gulp.src(prefixOfTargetDir + trgDirName + '/' + data[0].destDir + data[0].basePath)
-                        .pipe(nano())
-                        .pipe(rename({
-                            suffix: '.min'
-                        }))
-                        .on('end', function() {
-                            console.log('end deferred2');
-                            deferred2.resolve(true);
-                        });*/
-                    return deferred2.promise;
-                }, function(data) {
-                    console.log('error', data);
-                    return deferred.promise;
-                });
-            }
-        }
-    }
-};
 //如果文件有修改，同步最新css到目录 ./public/ to ../public/
 gulp.task('deploy_local_css', function() {
     var all;
     var chgdFiles = chgdCss;
-    syncCss(chgdFiles, isCompress, targetDirName);
+    syncModule.syncCss(chgdFiles, isCompress, sourceDirName, targetDirName, prefixOfTargetDir);
 });
 
-var syncJs = function(chgdFiles, isCompress, trgDirName) {
-    var all;
-    if (chgdFiles.path != undefined && chgdFiles.path != null && chgdFiles.path.match(/\.(js)$/i) && !chgdFiles.path.match(/\.min\.(js)$/i)) {
-        if (chgdFiles.path.match(/^(.*)\/([^\/]+)$/i)) {
-            var basePath = RegExp.$2;
-            var destDir = '';
-            var reg = new RegExp("^(.+)\/(" + sourceDirName + "\/)?(.+)\/([^\/]+)$", "i");
-            if (chgdFiles.path.match(reg)) {
-                destDir = RegExp.$3 + '/';
-                if (destDir.indexOf(sourceDirName) === -1) {
-                    destDir = sourceDirName + '/' + destDir;
-                }
-                console.log('destDir', prefixOfTargetDir + trgDirName + '/' + destDir + basePath);
-                all = gulp.src([
-                    chgdFiles.path
-                ])
-                    .pipe(gulpif(isCompress, ngAnnotate({
-                        //dynamic: false
-                    })))
-                    .pipe(gulpif(isCompress, uglify({
-                        output: {
-                            beautify: false
-                        },
-                        mangle: true,
-                        outSourceMap: false,
-                        basePath: basePath,
-                        sourceRoot: '/'
-                    })))
-                    .pipe(gulp.dest(prefixOfTargetDir + trgDirName + '/' + destDir));
-            }
-        }
-    }
-    return all;
-};
 //发布页面js代码 ./public/ to ../public/
 gulp.task('deploy_local_js', function() {
-    var all = syncJs(chgdFiles, isCompress, targetDirName);
+    var all = syncModule.syncJs(chgdFiles, isCompress, sourceDirName, targetDirName, prefixOfTargetDir);
     return merge(
         all
     );

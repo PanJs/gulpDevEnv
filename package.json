@@ -1,6 +1,6 @@
 {
   "name": "gulpDevEnv",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "Adam <zhaiduo@gmail.com>",
   "repository": {
     "type": "git",
@@ -12,7 +12,8 @@
   "scripts": {
     "watch": "gulp watch:Django --src=no",
     "watch-source": "gulp watch:Django --src=yes",
-    "test": "mocha"
+    "mocha": "mocha",
+    "changelog": "~/gitchangelog/gitchangelog > change.log"
   },
   "config": {},
   "main": "index.js",
@@ -46,7 +47,6 @@
     "less": "^2.5.1",
     "less-plugin-clean-css": "^1.5.1",
     "merge-stream": "^1.0.0",
-    "mocha-as-promised": "^2.0.0",
     "q": "^1.4.1",
     "requirejs": "^2.2.0",
     "rimraf": "^2.5.2",

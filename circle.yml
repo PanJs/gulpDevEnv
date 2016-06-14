@@ -1,0 +1,22 @@
+## Customize the test machine
+machine:
+
+  timezone:
+    Asia/Hong_Kong # Set the timezone
+
+  # Version of ruby to use
+  node:
+    version: 0.10.22
+
+## Customize dependencies
+dependencies:
+
+  override:
+    - npm install mocha -g
+    - npm install
+
+## Customize test commands
+test:
+  override:
+    - npm run mocha
+

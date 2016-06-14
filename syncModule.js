@@ -1,5 +1,5 @@
+
 'use strict';
-//http://mochajs.org/
 
 var gulp = require('gulp');
 var browserSync = require('browser-sync').create();
@@ -30,8 +30,6 @@ var merge = require('merge-stream');
 var fs = require('fs');
 var gulpif = require('gulp-if');
 
-var expect = require("chai").expect;
-
 //http://www.ituring.com.cn/article/54547
 var Q = require('q');
 var karmaServer = require('karma').Server;
@@ -40,34 +38,14 @@ var _red = function(title, info) {
     console.log(chalk.white.bgRed.bold(' ' + title + ' '), info);
 };
 
-var chai = require("chai");
-var chaiAsPromised = require("chai-as-promised");
-
-chai.use(chaiAsPromised);
-chai.should();
-
-var rmdir = require('rimraf');
-
-//////////配置目录名称
-
-//普通js脚本开发目录，一般放在gulpDevEnv目录下： gulpDevEnv/dev
-var sourceDirName = 'dev';
-//普通js脚本同步目录，一般放在gulpDevEnv目录外： ../dist/dev (dev和dist也可以同名)
-var targetDirName = 'dist'; //'dist';
-// check if targetDir is inside of gulpDevEnv or not
-var targetDirIsInside = true;
-var prefixOfTargetDir = (targetDirIsInside) ? '' : '../';
-//////////配置目录名称
-
-var syncLess = function(chgdFiles, trgDirName) {
+var syncLess = function(chgdFiles, sourceDirName, trgDirName) {
     if (chgdFiles.path != undefined && chgdFiles.path != null && chgdFiles.path.match(/\.(less)$/i)) {
         if (chgdFiles.path.match(/^(.*)\/([^\/]+)$/i)) {
             var basePath = RegExp.$2;
             var destDir = RegExp.$1 + '/';
-            var reg = new RegExp("^(.+)\/(" + sourceDirName + "\/)?(.+)\/([^\/]+)$", "i");
-            //console.log('syncLess', chgdFiles.path, reg);
+            var reg = new RegExp("^(.+)\/" + sourceDirName + "\/(.+)\/([^\/]+)$", "i");
             if (chgdFiles.path.match(reg)) {
-                //console.log('destDir', basePath, destDir);
+                //console.log('syncLess', basePath, chgdFiles.path, destDir);
                 var go = function() {
                     var deferred = Q.defer();
                     gulp.src(chgdFiles.path)
@@ -78,28 +56,26 @@ var syncLess = function(chgdFiles, trgDirName) {
                         .pipe(browserSync.stream({
                             match: "**/*.css"
                         }));
-
                     return deferred.promise;
                 };
                 var allPromise = Q.all([
                     go()
                 ]);
                 allPromise.then(function(data) {
-                    console.log('finished', data, prefixOfTargetDir + trgDirName + '/' + data[0].destDir + data[0].basePath);
-                    //var deferred2 = Q.defer();
-                    //return deferred2.promise;
+                    console.log('finished', data, '../' + trgDirName + '/' + data[0].destDir + data[0].basePath);
+                    var deferred2 = Q.defer();
+                    return deferred2.promise;
                 }, function(data) {
                     console.log('error', data);
-                    //return deferred.promise;
+                    return deferred.promise;
                 });
 
             }
-            return [prefixOfTargetDir + trgDirName + '/' + destDir + basePath];
         }
     }
 };
 
-var syncCss = function(chgdFiles, isCompress, trgDirName) {
+var syncCss = function(chgdFiles, isCompress, sourceDirName, trgDirName, prefixOfTargetDir) {
     if (chgdFiles.path != undefined && chgdFiles.path != null && chgdFiles.path.match(/\.(css)$/i) && !chgdFiles.path.match(/\.min\.(css)$/i)) {
         if (chgdFiles.path.match(/^(.*)\/([^\/]+)$/i)) {
             var basePath = RegExp.$2;
@@ -107,8 +83,10 @@ var syncCss = function(chgdFiles, isCompress, trgDirName) {
             var reg = new RegExp("^(.+)\/(" + sourceDirName + "\/)?(.+)\/([^\/]+)$", "i");
             if (chgdFiles.path.match(reg)) {
                 destDir = RegExp.$3 + '/';
+                if (destDir.indexOf(sourceDirName) === -1) {
+                    destDir = sourceDirName + '/' + destDir;
+                }
                 console.log('destDir', basePath, prefixOfTargetDir + trgDirName + '/' + destDir);
-
                 var go = function() {
                     var deferred = Q.defer();
                     gulp.src(chgdFiles.path)
@@ -152,7 +130,7 @@ var syncCss = function(chgdFiles, isCompress, trgDirName) {
     }
 };
 
-var syncJs = function(chgdFiles, isCompress, trgDirName) {
+var syncJs = function(chgdFiles, isCompress, sourceDirName, trgDirName, prefixOfTargetDir) {
     var all;
     if (chgdFiles.path != undefined && chgdFiles.path != null && chgdFiles.path.match(/\.(js)$/i) && !chgdFiles.path.match(/\.min\.(js)$/i)) {
         if (chgdFiles.path.match(/^(.*)\/([^\/]+)$/i)) {
@@ -161,7 +139,10 @@ var syncJs = function(chgdFiles, isCompress, trgDirName) {
             var reg = new RegExp("^(.+)\/(" + sourceDirName + "\/)?(.+)\/([^\/]+)$", "i");
             if (chgdFiles.path.match(reg)) {
                 destDir = RegExp.$3 + '/';
-                console.log('syncJs', prefixOfTargetDir + trgDirName + '/' + destDir + basePath);
+                if (destDir.indexOf(sourceDirName) === -1) {
+                    destDir = sourceDirName + '/' + destDir;
+                }
+                console.log('destDir', prefixOfTargetDir + trgDirName + '/' + destDir + basePath);
                 all = gulp.src([
                     chgdFiles.path
                 ])
@@ -181,79 +162,9 @@ var syncJs = function(chgdFiles, isCompress, trgDirName) {
             }
         }
     }
-    //return all
-    return [prefixOfTargetDir + trgDirName + '/' + destDir + basePath];
+    return all;
 };
 
-//////start test
-
-/*describe("gulpfile test: syncLess", function() {
-    var chgdFiles = {};
-    chgdFiles.path = __dirname + '/../dev/test.less';
-    var trgDirName = targetDirName;
-    var targetFile = __dirname + '/../' + trgDirName + '/dev/test.less';
-    var isTargetExist = null;
-    var isTargetExist2 = null;
-    if (fs.existsSync(targetFile)) {
-        isTargetExist = true;
-    } else {
-        isTargetExist = false;
-    }
-    if (isTargetExist) {
-        rmdir(__dirname + '/../' + trgDirName + '/dev', function(error) {
-            //console.log('failed to clean test files', error);
-        });
-    }
-    var data = syncLess(chgdFiles, trgDirName);
-    it("syncLess", function() {
-        //setTimeout(function() {
-            console.log('data', data);
-            expect(sourceDirName).equal('dev');
-            expect(chgdFiles.path).match(/test\.less/i);
-            expect(trgDirName).equal('dist');
-            expect(prefixOfTargetDir).equal('');
-            expect(isTargetExist).equal(false);
-
-            //expect(isTargetExist2).equal(true);
-            expect(data.length).equal(1);
-            expect(data[0]).match(/test\.less/i);
-        //}, 1000);
-    });
-
-});*/
-
-describe("gulpfile test: syncJs", function() {
-    var chgdFiles = {};
-    chgdFiles.path = __dirname + '/../dev/test.js';
-    var isCompress = true;
-    var trgDirName = targetDirName;
-    var targetFile = __dirname + '/../' + trgDirName + '/dev/test.js';
-    var isTargetExist = null;
-    var isTargetExist2 = null;
-    if (fs.existsSync(targetFile)) {
-        isTargetExist = true;
-    } else {
-        isTargetExist = false;
-    }
-    if (isTargetExist) {
-        rmdir(__dirname + '/../' + trgDirName + '/dev', function(error) {
-            //console.log('failed to clean test files', error);
-        });
-    }
-    var data = syncJs(chgdFiles, isCompress, trgDirName);
-    it("syncJs", function() {
-        //setTimeout(function() {
-            expect(sourceDirName).equal('dev');
-            expect(chgdFiles.path).match(/test\.js/i);
-            expect(trgDirName).equal('dist');
-            expect(prefixOfTargetDir).equal('');
-            expect(isTargetExist).equal(false);
-
-            expect(isTargetExist2).equal(true);
-            expect(data.length).equal(2);
-            expect(data[1]).match(/test\.js/i);
-        //}, 1000);
-    });
-
-});
-
+module.exports.syncLess = syncLess;
+module.exports.syncCss = syncCss;
+module.exports.syncJs = syncJs;

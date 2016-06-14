@@ -1,6 +1,9 @@
 # 前端Gulp开发环境架构工具
+
+[![CircleCI](https://circleci.com/gh/zhaiduo/gulpDevEnv/tree/master.svg?style=svg)](https://circleci.com/gh/zhaiduo/gulpDevEnv/tree/master)
+
 ```
-用于聘宝前端Gulp开发环境架构
+用于前端Gulp开发环境架构
 ```
 
 ## 快速使用

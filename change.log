@@ -1,0 +1,46 @@
+Changelog
+=========
+
+v0.2.1 (2016-06-14)
+-------------------
+
+Changes
+~~~~~~~
+
+- Update test script. [zhaiduo]
+
+Fix
+~~~
+
+- Gulp update bugs. [zhaiduo]
+
+  * 子目录下js同步到dev外面去了    √
+  * 子目录下css同步无效           √
+  * 新增、删除文件的同步           √
+
+v0.2.0 (2016-06-14)
+-------------------
+
+New
+~~~
+
+- Mocha tests. [zhaiduo]
+
+- Init boilerplate. [zhaiduo]
+
+Changes
+~~~~~~~
+
+- Update deprecated module. [zhaiduo]
+
+Fix
+~~~
+
+- Gulp update bugs. [zhaiduo]
+
+v0.1.0 (2016-06-05)
+-------------------
+
+- Initial commit. [Adam]
+
+

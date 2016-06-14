@@ -9,7 +9,7 @@ npm WARN deprecated CSSselect@0.7.0: the module is now available as 'css-select'
 npm WARN deprecated CSSwhat@0.4.7: the module is now available as 'css-what'
 npm WARN deprecated jade@0.26.3: Jade has been renamed to pug, please install the latest version of pug instead of jade
 
-> fsevents@1.0.12 install /Users/gzadamlv/gulpDevEnv/node_modules/fsevents
+> fsevents@1.0.12 install /Users/adam/gulpDevEnv/node_modules/fsevents
 > node-pre-gyp install --fallback-to-build
 
 gyp WARN download NVM_NODEJS_ORG_MIRROR is deprecated and will be removed in node-gyp v4, please use NODEJS_ORG_MIRROR
@@ -18,8 +18,8 @@ gyp WARN download NVM_NODEJS_ORG_MIRROR is deprecated and will be removed in nod
   SOLINK_MODULE(target) Release/.node
   CXX(target) Release/obj.target/fse/fsevents.o
   SOLINK_MODULE(target) Release/fse.node
-  COPY /Users/gzadamlv/gulpDevEnv/node_modules/fsevents/lib/binding/Release/node-v48-darwin-x64/fse.node
+  COPY /Users/adam/gulpDevEnv/node_modules/fsevents/lib/binding/Release/node-v48-darwin-x64/fse.node
   TOUCH Release/obj.target/action_after_build.stamp
-gulpDevEnv@0.1.0 /Users/gzadamlv/gulpDevEnv
+gulpDevEnv@0.1.0 /Users/adam/gulpDevEnv
 ├── angular@1.5.6
 ├── angular-mocks@1.5.6
