@@ -70,12 +70,12 @@ gulp.task('karma', function(done) {
 
 //less生成压缩版css
 gulp.task('lessmin', function() {
-    return gulp.src('./css/*.less')
+    return gulp.src('./' + sourceDirName + '/**/*.less')
         .pipe(less({
-            paths: [path.join(__dirname, 'css')],
+            paths: [path.join(__dirname, sourceDirName)],
             plugins: [cleancss]
         }))
-        .pipe(gulp.dest('css'))
+        .pipe(gulp.dest(sourceDirName))
         .pipe(browserSync.stream({
             match: "**/*.css"
         }));
@@ -83,18 +83,18 @@ gulp.task('lessmin', function() {
 
 //生成css，不压缩
 gulp.task('less', function() {
-    return gulp.src('./css/**/*.less')
+    return gulp.src('./' + sourceDirName + '/**/*.less')
         .pipe(less({
-            paths: [path.join(__dirname, 'css')]
+            paths: [path.join(__dirname, sourceDirName)]
         }))
-        .pipe(gulp.dest('css'))
+        .pipe(gulp.dest(sourceDirName))
         .pipe(browserSync.stream({
             match: "**/*.css"
         }));
 });
 
 gulp.task('cleanCssFiles', function() {
-    return gulp.src(['./css/**/*.css'], {
+    return gulp.src(['./' + sourceDirName + '/**/*.css'], {
             read: false
         })
         .pipe(clean());
@@ -133,23 +133,25 @@ gulp.task('watch:Django', function() {
         port: 4032
     });
     //Default: ['add', 'change', 'unlink']
-    gulp.watch("./" + sourceDirName + "/**/*.html").on("change", function(chg) {
-        console.log('watch', chg);
+    var _cbChgHtml = function(chg) {
+        console.log('watch html', chg);
         gulp.start('dev', function(done) {
             browserSync.reload();
         });
-    });
+    };
+    gulp.watch(sourceDirName + "/**/*.html", {cwd: "./"}).on("change", _cbChgHtml);
+
     //如果文件有修改，编译less到目录
-    gulp.watch("./" + sourceDirName + "/css/**/*.less").on("change", function(chg) {
+    gulp.watch(sourceDirName + "/**/*.less", {cwd: "./"}).on("change", function(chg) {
         console.log('watch', chg);
         gulp.start('dev', function(done) {
             browserSync.reload();
         });
     });
     //如果文件有修改，编译less到public目录(同一个目录less=>css)
-    gulp.watch("./" + sourceDirName + "/**/*.less").on("change", function(chg) {
-        console.log('watch', chg);
-        if (chg.type == 'changed') {
+    gulp.watch(sourceDirName + "/**/*.less", {cwd: "./"}).on("change", function(chg) {
+        console.log('watch less', chg);
+        if (chg.type.match(/^(added|changed|deleted)$/i)) {
             //有文件被修改
             chgdLess = chg;
             gulp.start('deploy_local_less', function(done) {
@@ -158,21 +160,22 @@ gulp.task('watch:Django', function() {
         }
     });
     //如果文件有修改，发布页面css代码
-    gulp.watch("./" + sourceDirName + "/**/*.css").on("change", function(chg) {
-        console.log('watch', chg);
-        if (chg.type == 'changed') {
+    var _cbChgCss = function(chg) {
+        console.log('watch css', chg);
+        if (chg.type.match(/^(added|changed|deleted)$/i)) {
             //有文件被修改
             chgdCss = chg;
             gulp.start('deploy_local_css', function(done) {
                 browserSync.reload();
             });
         }
-    });
+    };
+    gulp.watch(sourceDirName + "/**/*.css", {cwd: "./"}).on("change", _cbChgCss);
     //如果文件有修改，发布页面js代码
-    gulp.watch("./" + sourceDirName + "/**/*.js").on("change", function(chg) {
+    gulp.watch(sourceDirName + "/**/*.js", {cwd: "./"}).on("change", function(chg) {
         //{ type: 'changed', path: '' }
-        console.log('watch', chg);
-        if (chg.type == 'changed') {
+        console.log('watch js', chg);
+        if (chg.type.match(/^(added|changed|deleted)$/i)) {
             //有文件被修改
             chgdFiles = chg;
             gulp.start('deploy_local_js', function(done) {
@@ -190,7 +193,7 @@ var syncLess = function(chgdFiles, trgDirName) {
             var destDir = RegExp.$1 + '/';
             var reg = new RegExp("^(.+)\/" + sourceDirName + "\/(.+)\/([^\/]+)$", "i");
             if (chgdFiles.path.match(reg)) {
-                //console.log('destDir', basePath, destDir);
+                //console.log('syncLess', basePath, chgdFiles.path, destDir);
                 var go = function() {
                     var deferred = Q.defer();
                     gulp.src(chgdFiles.path)
@@ -201,7 +204,6 @@ var syncLess = function(chgdFiles, trgDirName) {
                         .pipe(browserSync.stream({
                             match: "**/*.css"
                         }));
-
                     return deferred.promise;
                 };
                 var allPromise = Q.all([
@@ -237,8 +239,10 @@ var syncCss = function(chgdFiles, isCompress, trgDirName) {
             var reg = new RegExp("^(.+)\/(" + sourceDirName + "\/)?(.+)\/([^\/]+)$", "i");
             if (chgdFiles.path.match(reg)) {
                 destDir = RegExp.$3 + '/';
+                if (destDir.indexOf(sourceDirName) === -1) {
+                    destDir = sourceDirName + '/' + destDir;
+                }
                 console.log('destDir', basePath, prefixOfTargetDir + trgDirName + '/' + destDir);
-
                 var go = function() {
                     var deferred = Q.defer();
                     gulp.src(chgdFiles.path)
@@ -297,6 +301,9 @@ var syncJs = function(chgdFiles, isCompress, trgDirName) {
             var reg = new RegExp("^(.+)\/(" + sourceDirName + "\/)?(.+)\/([^\/]+)$", "i");
             if (chgdFiles.path.match(reg)) {
                 destDir = RegExp.$3 + '/';
+                if (destDir.indexOf(sourceDirName) === -1) {
+                    destDir = sourceDirName + '/' + destDir;
+                }
                 console.log('destDir', prefixOfTargetDir + trgDirName + '/' + destDir + basePath);
                 all = gulp.src([
                     chgdFiles.path
@@ -350,7 +357,7 @@ gulp.task('gallery', function() {
 ////////////////////////////
 //重新发布测试环境
 gulp.task('dev', [
-    'cleanCssFiles', 'less'
+    'cleanCssFiles', 'less', 'deploy_local_css'
 ]);
 //启动默认开发环境： gulp
 gulp.task('default', [
